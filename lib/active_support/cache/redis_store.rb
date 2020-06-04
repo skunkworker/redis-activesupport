@@ -77,7 +77,10 @@ module ActiveSupport
       end
 
       def write(name, value, options = nil)
-        options = merged_options(options)
+        # Note: sending a symbol-keyed hash to merged_options will transform the keys into strings
+        # This will break ActiveSupport::Cache 5.2+ as it has symbol parameters in the method
+        # definition, so symbolize_keys after the options are merged.
+        options = merged_options(options).symbolize_keys
         instrument(:write, name, options) do |payload|
           if options[:expires_in].present? && options[:race_condition_ttl].present? && options[:raw].blank?
             options[:expires_in] = options[:expires_in].to_f + options[:race_condition_ttl].to_f
